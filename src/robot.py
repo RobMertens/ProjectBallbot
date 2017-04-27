@@ -21,7 +21,8 @@ class robot:
 			self.ser.flushOutput()
         	else:
             		print "Error when opening serial port"	
-	        	self.mav = mavlink.MAVLink(0)
+        	
+		self.mav = mavlink.MAVLink(0)
 	
 	def receive(self):
 		b = self.ser.read(1024)

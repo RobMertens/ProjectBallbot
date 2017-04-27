@@ -70,7 +70,7 @@ def main():
 	# Find obstacles.
 	# Declare vars
 	# Dicts
-	markers = {}
+	markers   = {}
 	obstacles = {}
 	
 	field.update()

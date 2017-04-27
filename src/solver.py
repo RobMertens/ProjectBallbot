@@ -37,10 +37,13 @@ class solver:
 		@param samplePeriod The sample period value.
 		"""
 		self.samplePeriod = samplePeriod
-		
+	
 	def setRobot(self, initialPosition, terminalPosition):
 		"""
 		Method for adding a robot to the system.
+		
+		@param:
+		@param:
 		"""
 		# Positions.
 		self.__initialPosition = initialPosition
@@ -65,12 +68,20 @@ class solver:
 		# Define the shape of the room.
 		# This is the field of view of the camera.
 		# Manual is good enough for now.
-		self.__environment = self.omg.Environment(room={'shape': self.omg.Rectangle(width, height)})
+		self.__environment = self.omg.Environment(room={'shape': self.omg.Rectangle(width, height), 'position': [0.5*width, 0.5*height]})
+		self.addObstacles(obstacles)
+	
+	def addObstacles(self, obstacles):
+		"""
+		Method for setting up the environment.
 		
+		@param: obstacles A list with all obstacles in eagle-format.
+		"""
 		# Put in all obstacles.
 		for i,o in obstacles.iteritems():
 			# center
-			center = [o[2], o[3]]
+			#center = []
+			
 			# Sort
 			if (o[1] == 0):
 				# TRIANGLE
@@ -87,7 +98,8 @@ class solver:
 				orientation = self.m.atan2((o[4] - o[6]), (o[7] - o[5]))
 				height 	= (o[4] - o[6])/(self.m.sin(orientation))
 				width 	= (o[4] - o[2])/(self.m.cos(orientation))
-				center  = [(o[2] + 0.5*width*self.m.cos(orientation) - 0.5*height*self.m.sin(orientation)), (o[3] + 0.5*width*self.m.sin(orientation) + 0.5*height*self.m.cos(orientation))]
+				center  = [(o[2] + 0.5*width*self.m.cos(orientation) - 0.5*height*self.m.sin(orientation)),
+					   (o[3] + 0.5*width*self.m.sin(orientation) + 0.5*height*self.m.cos(orientation))]
 				
 				obstacle = self.omg.Rectangle(width, height, orientation)
 				
@@ -124,16 +136,16 @@ class solver:
 		self.__position = self.np.c_[solution['state']]
 		self.__velocity = self.np.c_[solution['input']]
 		self.__time     = self.np.c_[solution['time']]
-	
+		
 	def getSolution(self):
 		"""
 		Method for getting the solution.
 		
-		@return: __position[0] The x-position path vector.
-		@return: __position[1] The x-position path vector.
-		@return: __velocity[0] The x-position path vector.
-		@return: __velocity[1] The x-position path vector.
-		@return: __time The time vector.
+		@return: __position[0]	The x-position path vector.
+		@return: __position[1]	The y-position path vector.
+		@return: __velocity[0]	The x-velocity path vector.
+		@return: __velocity[1]	The y-velocity path vector.
+		@return: __time[0]	The time vector.
 		"""
 		return self.__position[0], self.__position[1],self.__velocity[0], self.__velocity[1], self.__time[0]
 	

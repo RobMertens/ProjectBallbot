@@ -1,4 +1,2 @@
-images/simulator/
-images/opt_problem/
-images/simulator/
-*~
+*.png
+doc
