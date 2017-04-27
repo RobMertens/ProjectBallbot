@@ -29,10 +29,10 @@ O2_ORIGIN_X = 5.0
 O2_ORIGIN_Y = 5.0
 O2_RADIUS   = 2.0
 
-POS_START_X = -9.0
-POS_START_Y = -9.0
-POS_END_X   =  9.0
-POS_END_Y   =  9.0
+POS_START_X = 1.0
+POS_START_Y = 1.0
+POS_END_X   = 19.0
+POS_END_Y   = 19.0
 
 # Functions.
 def rectangle(n, x, y, w, h, o):
