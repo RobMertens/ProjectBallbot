@@ -4,7 +4,7 @@ Created on Tue Feb 28 13:46:26 2017
 
 @author: ROB
 """
-from src import PID
+from pid import PID
 import numpy as np
 import matplotlib.pyplot as plt
 

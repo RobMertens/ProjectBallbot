@@ -9,11 +9,11 @@ Main file for the RPi-ballbot.
 import numpy as np
 
 # Classes
-from src import PID
-from src import field
-from src import solver
-from src import watchdog
-from src import robot
+from pid import PID
+from field import field
+from solver import solver
+from watchdog import watchdog
+from robot import Robot
 
 # Static vars.
 

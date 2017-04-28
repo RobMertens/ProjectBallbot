@@ -9,11 +9,11 @@ Main file for the RPi-ballbot.
 import numpy as np
 
 # Classes
-from src import PID
-from src import field
-from src import solver
-from src import watchdog
-from src import robot
+from pid import PID
+from field import field
+from solver import solver
+from watchdog import watchdog
+from robot import Robot
 
 # Static vars.
 
@@ -48,7 +48,8 @@ P_GROUP_PC	= 'PC'
 LOOPTIME = 0.1
 
 # Objects.
-ballbot = robot(R_MARKER, R_PORT)
+#ballbot = Robot(R_MARKER, R_PORT)
+ballbot = Robot(R_PORT)
 ballbot.set_attitude_mode()
 
 solver = solver(LOOPTIME)

@@ -5,7 +5,7 @@ This file contains the optimization problem solved by the OMG-Tools toolbox.
 """
 # Imports.
 from math import sin, cos, pi
-from src import solver
+from solver import solver
 
 import numpy as np
 import matplotlib.pyplot as plt
