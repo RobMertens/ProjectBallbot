@@ -5,7 +5,7 @@ import time
 port = '/dev/ttyACM0'       # default usb port
 #port = '/dev/rfcomm0'       # default bluetooth port
 
-ballbot = Robot(port)         #make a robot/ballbot
+ballbot = Robot(0, port)         #make a robot/ballbot
 running = True                          #set the running flag
 
 # Function where the ballbot receives data
