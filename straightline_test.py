@@ -48,7 +48,8 @@ P_GROUP_PC	= 'PC'
 LOOPTIME = 0.1
 
 # Objects.
-ballbot = robot(R_MARKER, R_PORT)
+#ballbot = Robot(R_MARKER, R_PORT)
+ballbot = Robot(R_PORT)
 ballbot.set_attitude_mode()
 
 solver = solver(LOOPTIME)
