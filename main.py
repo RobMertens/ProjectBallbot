@@ -61,79 +61,78 @@ pidPosX = PID(C_KP_X, C_KI_X, C_KD_X, C_MAX_X, C_MIN_X)
 pidPosY = PID(C_KP_Y, C_KI_Y, C_KD_Y, C_MAX_Y, C_MIN_Y)
 
 
-def main():
-	"""
-	Main loop.
-	"""	
-	# Receive start command w/ endpoint.
+#def main():
+"""
+Main loop.
+"""	
+# Receive start command w/ endpoint.
+
+# Find obstacles.
+# Declare vars
+# Dicts
+markers   = {}
+obstacles = {}
+
+field.update()
+#markers = field.getMarkers()
+obstacles = field.getObstacles()
+
+solver.setEnvironment(S_ROOM_WIDTH, S_ROOM_HEIGHT, obstacles)
+
+while(1):
+	# Mode.
+	ballbot.set_attitude_mode()
 	
-	# Find obstacles.
-	# Declare vars
-	# Dicts
-	markers   = {}
-	obstacles = {}
-	
+	# Start position from actual position.
 	field.update()
-	#markers = field.getMarkers()
-	obstacles = field.getObstacles()
+	while(field.checkMarker(R_MARKER) != False):
+		posXStart, posYStart = field.getMarkerPosition(R_MARKER)
 	
-	solver.setEnvironment(S_ROOM_WIDTH, S_ROOM_HEIGHT, obstacles)
+	# Receive end position. (PC-GROUP)
+	posXEnd = 0.0
+	posYEnd = 0.0
 	
-	while(1):
-		# Mode.
-		ballbot.set_attitude_mode()
+	# Solve optimization problem.
+	solver.setRobot([posXStart, posYStart],
+			[posXEnd, posYEnd])
+	solver.solve()
+	
+	posXPath, posYPath, velXPath, velYPath, time = solver.getSolution()
+	
+	# Move over path.		
+	# Velocity mode.
+	ballbot.set_velocity_mode()
+	
+	# Loop
+	for i in xrange(1, len(time)):
+		# Watchdog
+		watchdog.start() 
 		
-		# Start position from actual position.
+		# Update field.
 		field.update()
-		while(field.checkMarker(R_MARKER) != False):
-			posXStart, posYStart = field.getMarkerPosition(R_MARKER)
 		
-		# Receive end position. (PC-GROUP)
-		posXEnd = 0.0
-		posYEnd = 0.0
+		# Get ballbot position.
+		if (field.checkMarker(R_MARKER)):
+			posXCam, posYCam = field.getMarkerPosition(R_MARKER)
+		else:
+			# Give error statement.
+			pass
 		
-		# Solve optimization problem.
-		solver.setRobot([posXStart, posYStart],
-				[posXEnd, posYEnd])
-		solver.solve()
+		# Correct position.
+		velXCorr = pidPosX.calculate(posXCam, posXPath)
+		velYCorr = pidPosY.calculate(posYCam, posYPath)
 		
-		posXPath, posYPath, velXPath, velYPath, time = solver.getSolution()
+		# Feed forward.
+		velXCmd = velXPath + velXCorr
+		velYCmd = velYPath + velYCorr
 		
-		# Move over path.		
-		# Velocity mode.
-		ballbot.set_velocity_mode()
+		# Velocity command.			
+		ballbot.setVelocity(velXCmd, velYCmd, 0)
 		
-		# Loop
-		for i in xrange(1, len(time)):
-			# Watchdog
-			watchdog.start() 
-			
-			# Update field.
-			field.update()
-			
-			# Get ballbot position.
-			if (field.checkMarker(R_MARKER)):
-				posXCam, posYCam = field.getMarkerPosition(R_MARKER)
-			else:
-				# Give error statement.
-				pass
-			
-			# Correct position.
-			velXCorr = pidPosX.calculate(posXCam, posXPath)
-			velYCorr = pidPosY.calculate(posYCam, posYPath)
-			
-			# Feed forward.
-			velXCmd = velXPath + velXCorr
-			velYCmd = velYPath + velYCorr
-			
-			# Velocity command.			
-			ballbot.setVelocity(velXCmd, velYCmd, 0)
-			
-			# Maintain loop time.
-			watchdog.hold()
-	
-	
+		# Maintain loop time.
+		watchdog.hold()
+
 # Declare main.
-if __name__ == "__main__":
-	main()
+#if __name__ == "__main__":
+#	main()
         
