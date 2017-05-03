@@ -7,6 +7,8 @@ Main file for the RPi-ballbot.
 # Import.
 # Python
 import numpy as np
+import threading
+import time
 
 # Classes
 from pid import PID
@@ -50,7 +52,7 @@ LOOPTIME = 0.1
 # Objects.
 #ballbot = Robot(R_MARKER, R_PORT)
 ballbot = Robot(R_PORT)
-ballbot.set_attitude_mode()
+running = True                          #set the running flag
 
 solver = solver(LOOPTIME)
 
@@ -62,72 +64,102 @@ pidPosX = PID(C_KP_X, C_KI_X, C_KD_X, C_MAX_X, C_MIN_X)
 pidPosY = PID(C_KP_Y, C_KI_Y, C_KD_Y, C_MAX_Y, C_MIN_Y)
 
 
-#def main():
+def receiver():
+	"""
+	Function where the ballbot receives data
+	"""
+	while running:
+		ballbot.receive()
+		time.sleep(0.05)
+
+def controller():
+	"""
+	Main loop.
+	"""
+	while running:	
+		# Receive start command w/ endpoint.
+	
+		# Mode.
+		ballbot.set_attitude_mode()
+	
+		# Find obstacles.
+		# Declare vars
+		# Dicts
+		markers   = {}
+		obstacles = {}
+	
+		solver.setEnvironment(S_ROOM_WIDTH, S_ROOM_HEIGHT, obstacles)
+	
+		# Start position from actual position.
+		field.update()
+		while(field.checkMarker(R_MARKER) != False):
+			posXStart, posYStart = field.getMarkerPosition(R_MARKER)
+	
+		# Receive end position. (PC-GROUP)
+		posXEnd = 4.0
+		posYEnd = 2.0
+	
+		# Solve optimization problem.
+		solver.setRobot([posXStart, posYStart],
+				[posXEnd, posYEnd])
+		solver.solve()
+	
+		posXPath, posYPath, velXPath, velYPath, time = solver.getSolution()
+	
+		# Move over path.		
+		# Velocity mode.
+		ballbot.set_velocity_mode()
+	
+		# Loop
+		for i in xrange(1, len(time)):
+			# Watchdog
+			watchdog.start() 
+		
+			# Update field.
+			field.update()
+		
+			# Get ballbot position.
+			if (field.checkMarker(R_MARKER)):
+				posXCam, posYCam = field.getMarkerPosition(R_MARKER)
+			else:
+				# Give error statement.
+				pass
+		
+			# Correct position.
+			velXCorr = pidPosX.calculate(posXCam, posXPath)
+			velYCorr = pidPosY.calculate(posYCam, posYPath)
+		
+			# Feed forward.
+			velXCmd = velXPath + velXCorr
+			velYCmd = velYPath + velYCorr
+		
+			# Velocity command.			
+			ballbot.set_velocity_cmd(velXCmd, velYCmd, 0)
+		
+			# Maintain loop time.
+			watchdog.hold()
+	
+		# MODE.
+		ballbot.set_attitude_mode()
+
 """
-Main loop.
-"""	
-# Receive start command w/ endpoint.
+MAIN: THREADS
+"""
+# Make the 2 threads and start them
+t_receiver = threading.Thread(None, receiver, "ballbot_thread")
+t_controller = threading.Thread(None, controller, "controller_thread")
+t_receiver.start()
+t_controller.start()
 
-# Find obstacles.
-# Declare vars
-# Dicts
-markers   = {}
-obstacles = {}
+# Wait for user input to make the program halt
+raw_input("press some key...")
 
-solver.setEnvironment(S_ROOM_WIDTH, S_ROOM_HEIGHT, obstacles)
+# Set running false when we got a keystroke
+running = False
 
-# Mode.
-ballbot.set_attitude_mode()
+# Wait for both threads to finish
+while t_receiver.is_alive() or t_controller.is_alive():
+	time.sleep(0.1)
 
-# Start position from actual position.
-field.update()
-while(field.checkMarker(R_MARKER) != False):
-	posXStart, posYStart = field.getMarkerPosition(R_MARKER)
-
-# Receive end position. (PC-GROUP)
-posXEnd = 4.0
-posYEnd = 2.0
-
-# Solve optimization problem.
-solver.setRobot([posXStart, posYStart],
-		[posXEnd, posYEnd])
-solver.solve()
-
-posXPath, posYPath, velXPath, velYPath, time = solver.getSolution()
-
-# Move over path.		
-# Velocity mode.
-ballbot.set_velocity_mode()
-
-# Loop
-for i in xrange(1, len(time)):
-	# Watchdog
-	watchdog.start() 
-	
-	# Update field.
-	field.update()
-	
-	# Get ballbot position.
-	if (field.checkMarker(R_MARKER)):
-		posXCam, posYCam = field.getMarkerPosition(R_MARKER)
-	else:
-		# Give error statement.
-		pass
-	
-	# Correct position.
-	velXCorr = pidPosX.calculate(posXCam, posXPath)
-	velYCorr = pidPosY.calculate(posYCam, posYPath)
-	
-	# Feed forward.
-	velXCmd = velXPath + velXCorr
-	velYCmd = velYPath + velYCorr
-	
-	# Velocity command.			
-	ballbot.setVelocity(velXCmd, velYCmd, 0)
-	
-	# Maintain loop time.
-	watchdog.hold()
-	
-# Declare main.
-#if __name__ == "__main__":
-#	main()
+ballbot.set_idle_mode()
+print "Stopped"
