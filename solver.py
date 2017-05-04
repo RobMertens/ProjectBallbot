@@ -38,7 +38,7 @@ class solver:
 		"""
 		self.samplePeriod = samplePeriod
 	
-	def setRobot(self, initialPosition, terminalPosition):
+	def setRobot(self, initialPosition, terminalPosition, vMax=0.05, aMax=0.05):
 		"""
 		Method for adding a robot to the system.
 		
@@ -53,7 +53,7 @@ class solver:
 		options = {'syslimit': 'norm_inf', 'safety_distance': 0.5}
 		
 		# Add and set.
-		self.__robot = self.omg.Holonomic(options=options)
+		self.__robot = self.omg.Holonomic(options=options, bounds={'vmin':-vMax, 'vmax': vMax, 'amin':-aMax, 'amax':aMax}))
 		self.__robot.set_initial_conditions(self.__initialPosition)
 		self.__robot.set_terminal_conditions(self.__terminalPosition)
 	
