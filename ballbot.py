@@ -2,7 +2,7 @@ from robot import Robot
 import threading
 import time
 
-port = '/dev/ttyAMA0'       # default usb port
+port = '/dev/ttyACM0'       # default usb port
 #port = '/dev/rfcomm0'       # default bluetooth port
 
 ballbot = Robot(port)         #make a robot/ballbot
@@ -12,8 +12,9 @@ running = True                          #set the running flag
 def ballbot_update():
     while running:
         ballbot.receive()
-        ballbot.info_print()
+        #print(ballbot.x, ballbot.y, ballbot.z, ballbot.roll, ballbot.pitch, ballbot.yaw)
 	time.sleep(0.05)
+	
 	
 # Controller update
 dt = 5

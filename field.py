@@ -11,7 +11,6 @@ class field:
 	# Imports.
 	struct 	= __import__('struct')
 	#pyre 	= __import__('pyre')
-	__node = p.Pyre()
 	
 	# Data buffer		
 	markers = {}
@@ -32,9 +31,10 @@ class field:
 		self.__name = name
 		self.__group = group
 		
-		__node.set_name(self.__name)
-		__node.start()
-		__node.join(self.__group)
+		self.__node = p.Pyre(self.__name)
+		#self.__node.set_name(self.__name)
+		self.__node.start()
+		self.__node.join(self.__group)
 	
 	def __exit__(self):
 		"""
@@ -43,7 +43,7 @@ class field:
 	
 		@param: name The name of the pyre node.
 		"""
-		__node.stop()
+		self.__node.stop()
 	
 	def update(self):
 		"""
@@ -61,9 +61,9 @@ class field:
 		success = True
 		
 		# Obtain information from camera.
-		message = __node.recv()
+		message = self.__node.recv()
 		while(message[0] != 'SHOUT'):
-			message = __node.recv()
+			message = self.__node.recv()
 
 		# Only take the camera data.
 		package = message[4]
@@ -72,27 +72,27 @@ class field:
 		while(byte < len(package)):
 			# HEADER
 			# Size.
-			size = struct.unpack('@Q', package[byte:(byte+8)])[0]
+			size = self.struct.unpack('@Q', package[byte:(byte+8)])[0]
 			byte += 8
 			
 			# Header
-			h_id = struct.unpack('@i', package[byte:(byte+4)])[0]
+			h_id = self.struct.unpack('@i', package[byte:(byte+4)])[0]
 			byte += size
 	
 			# REST
-			size = struct.unpack('@Q', package[byte:(byte+8)])[0]	
+			size = self.struct.unpack('@Q', package[byte:(byte+8)])[0]	
 			byte += 8
 			
 			# MARKER
-			if (h_id == __MARKER):						
-				m_id, m_x, m_y, m_t = struct.unpack('@i3d', package[byte:(byte+size)])
+			if (h_id == self.__MARKER):						
+				m_id, m_x, m_y, m_t = self.struct.unpack('@i3d', package[byte:(byte+size)])
 				self.markers.update({markerCount:[m_id, m_x, m_y, m_t]})
 				
 				markerCount += 1
 				byte += size
 			
 			# OBSTACLE
-			elif (h_id == __OBSTACLE):
+			elif (h_id == self.__OBSTACLE):
 				o_id, o_shape, o_x1, o_y1, o_x2, o_y2, o_x3, o_y3 = struct.unpack('@2i6d', package[byte:(byte+size)])
 				self.obstacles.update({obstacleCount:[o_id, o_shape, o_x1, o_y1, o_x2, o_y2, o_x3, o_y3]})
 				
@@ -100,7 +100,7 @@ class field:
 				byte += size
 			
 			# IMAGE
-			elif (h_id == __IMAGE):
+			elif (h_id == self.__IMAGE):
 				#TODO:: What to do with an image?
 				success = False
 			
@@ -117,11 +117,11 @@ class field:
 	
 		@return: active Is the specific marker active (True/False).
 		"""
-		active = false
+		active = False
 		
-		for i in self.markers:
-			if (i[0] == markerId):
-				active = true
+		for i,j in self.markers.iteritems():
+			if (j[0] == markerId):
+				active = True
 		return active
 		
 	def getMarkers(self):
@@ -132,7 +132,7 @@ class field:
 		"""
 		return self.markers
 	
-	def getMarker(self, markerId):
+	def getMarkerData(self, markerId):
 		"""
 		Method for getting all data of a given marker.
 		The data is [id, x, y, yaw].
@@ -142,9 +142,9 @@ class field:
 		"""
 		marker = [0]
 		
-		for i in self.markers:
-			if (i[0] == markerId):
-				marker = i
+		for i,j in self.markers.iteritems():
+			if (j[0] == markerId):
+				marker = j
 		
 		return marker
 	
@@ -155,12 +155,12 @@ class field:
 
 		@param: markerId The marker id.
 		@return: marker The marker data package.
-		"""	
+		"""
 		marker = [0]
 		
-		for i in self.markers:
-			if (i[0] == markerId):
-				marker = i[1:3]
+		for i,j in self.markers.iteritems():
+			if (j[0] == markerId):
+				marker = j[1:4]
 		
 		return marker
 	
@@ -174,9 +174,9 @@ class field:
 		"""
 		marker = [0]
 
-		for i in self.markers:
-			if (i[0] == markerId):
-				marker = i[1:2]
+		for i,j in self.markers.iteritems():
+			if (j[0] == markerId):
+				marker = j[1:3]
 		
 		return marker
 	
@@ -190,9 +190,9 @@ class field:
 		"""
 		marker = [0]
 		
-		for i in self.markers:
-			if (i[0] == markerId):
-				marker = i[3]
+		for i,j in self.markers.iteritems():
+			if (j[0] == markerId):
+				marker = j[3]
 		
 		return marker
 	
@@ -214,7 +214,7 @@ class field:
 		"""
 		obstacle = [0]
 		
-		for j in self.obstacles:
+		for i,j in self.obstacles:
 			if (j[0] == obstacleId):
 				obstacle = j
 		
@@ -245,7 +245,7 @@ class field:
 		Method
 		"""
 		# Count.
-		objectCount = getMarkerCount() + getObstacleCount()
+		objectCount = self.getMarkerCount() + self.getObstacleCount()
 		
 		# Return.
 		return objectCount

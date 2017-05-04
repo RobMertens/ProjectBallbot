@@ -91,9 +91,29 @@ class Robot:
     def set_position_mode(self):
         msg = self.mav.event_encode(self.mode_position())
         self.send(msg)
+    
+    def ticks2meter(self, tick):
+	a = 3800
+    	b = 0
+	
+	meter = a*tick + b
+	
+	return meter
+	
+    def meter2ticks(self, meter):
+	a = 1/3800
+    	b = 0
+	
+	tick = a*meter + b
+	
+	return tick
 
     def set_velocity_cmd(self, vx, vy, vz):
-        msg = self.mav.velocity_cmd_encode(vx, vy, vz, 0, 0, 0)
+	tx = meter2ticks(vx)
+	ty = meter2ticks(vy)
+	tz = meter2ticks(vz)
+	
+        msg = self.mav.velocity_cmd_encode(tx, ty, tz, 0, 0, 0)
         self.send(msg)
 
 

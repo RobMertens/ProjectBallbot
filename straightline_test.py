@@ -8,7 +8,7 @@ Main file for the RPi-ballbot.
 # Python
 import numpy as np
 import threading
-import time
+import time as t
 
 # Classes
 from pid import PID
@@ -34,7 +34,7 @@ C_MAX_Y =  1.0
 C_MIN_Y = -1.0
 
 # R : Robot/Ballbot
-R_MARKER = 8
+R_MARKER = 12
 R_PORT   = '/dev/ttyACM0'
 
 # S : Solver/OMG
@@ -66,79 +66,88 @@ pidPosY = PID(C_KP_Y, C_KI_Y, C_KD_Y, C_MAX_Y, C_MIN_Y)
 
 def receiver():
 	"""
-	Function where the ballbot receives data
+	Function where the ballbot receives info about its state.
+	state = [x, y, z, r, p, y]'
 	"""
 	while running:
 		ballbot.receive()
-		time.sleep(0.05)
+		t.sleep(0.05)
 
 def controller():
 	"""
-	Main loop.
+	Function which performs the motion tasks.
 	"""
-	while running:	
-		# Receive start command w/ endpoint.
+	for i in range(0,5):
+		print(5-i)
+		t.sleep(1)
 	
+	while running:
 		# Mode.
 		ballbot.set_attitude_mode()
-	
+		
 		# Find obstacles.
 		# Declare vars
 		# Dicts
 		markers   = {}
 		obstacles = {}
-	
+		
 		solver.setEnvironment(S_ROOM_WIDTH, S_ROOM_HEIGHT, obstacles)
-	
+		print("Environment set.")
+		
 		# Start position from actual position.
 		field.update()
-		while(field.checkMarker(R_MARKER) != False):
-			posXStart, posYStart = field.getMarkerPosition(R_MARKER)
-	
+		print("Field updated.")
+		
+		while(field.checkMarker(R_MARKER) == False):
+			print("Robot not found!")
+			pass
+		
+		posXStart, posYStart = field.getMarkerPosition(R_MARKER)
+		
 		# Receive end position. (PC-GROUP)
 		posXEnd = 4.0
 		posYEnd = 2.0
-	
+		
 		# Solve optimization problem.
 		solver.setRobot([posXStart, posYStart],
 				[posXEnd, posYEnd])
 		solver.solve()
-	
+		
 		posXPath, posYPath, velXPath, velYPath, time = solver.getSolution()
-	
+		
 		# Move over path.		
 		# Velocity mode.
 		ballbot.set_velocity_mode()
-	
+		
 		# Loop
 		for i in xrange(1, len(time)):
 			# Watchdog
 			watchdog.start() 
-		
+			
 			# Update field.
 			field.update()
-		
+			
 			# Get ballbot position.
 			if (field.checkMarker(R_MARKER)):
 				posXCam, posYCam = field.getMarkerPosition(R_MARKER)
 			else:
 				# Give error statement.
-				pass
-		
+				print("Robot not found!")
+			
 			# Correct position.
 			velXCorr = pidPosX.calculate(posXCam, posXPath)
 			velYCorr = pidPosY.calculate(posYCam, posYPath)
-		
+			
 			# Feed forward.
 			velXCmd = velXPath + velXCorr
 			velYCmd = velYPath + velYCorr
-		
+			
 			# Velocity command.			
 			ballbot.set_velocity_cmd(velXCmd, velYCmd, 0)
-		
+			
 			# Maintain loop time.
 			watchdog.hold()
-	
+		
 		# MODE.
 		ballbot.set_attitude_mode()
 
@@ -158,8 +167,9 @@ raw_input("press some key...")
 running = False
 
 # Wait for both threads to finish
-while t_receiver.is_alive() or t_controller.is_alive():
-	time.sleep(0.1)
+#while t_receiver.is_alive() or t_controller.is_alive():
+#	pass
+#	t.sleep(0.1)
 
 ballbot.set_idle_mode()
 print "Stopped"
