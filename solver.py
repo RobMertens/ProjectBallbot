@@ -50,10 +50,10 @@ class solver:
 		self.__terminalPosition = terminalPosition
 		
 		# Options.
-		options = {'syslimit': 'norm_inf', 'safety_distance': 0.5}
+		options = {'syslimit': 'norm_2', 'safety_distance': 0.5}
 		
 		# Add and set.
-		self.__robot = self.omg.Holonomic(options=options, bounds={'vmin':-vMax, 'vmax': vMax, 'amin':-aMax, 'amax':aMax}))
+		self.__robot = self.omg.Holonomic(self.omg.Circle(0.1), options=options, bounds={'vmax': vMax, 'amax':aMax})
 		self.__robot.set_initial_conditions(self.__initialPosition)
 		self.__robot.set_terminal_conditions(self.__terminalPosition)
 	
@@ -68,6 +68,7 @@ class solver:
 		# Define the shape of the room.
 		# This is the field of view of the camera.
 		# Manual is good enough for now.
+		#self.__environment = self.omg.Environment(room={'shape': self.omg.Rectangle(width, height)})
 		self.__environment = self.omg.Environment(room={'shape': self.omg.Rectangle(width, height), 'position': [0.5*width, 0.5*height]})
 		self.addObstacles(obstacles)
 	

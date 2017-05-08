@@ -214,7 +214,7 @@ class field:
 		"""
 		obstacle = [0]
 		
-		for i,j in self.obstacles:
+		for i,j in self.obstacles.iteritems():
 			if (j[0] == obstacleId):
 				obstacle = j
 		

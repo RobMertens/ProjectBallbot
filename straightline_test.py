@@ -102,7 +102,7 @@ def controller():
 			print("Robot not found!")
 			pass
 		
-		posXStart, posYStart = field.getMarkerPosition(R_MARKER)
+		[posXStart, posYStart] = field.getMarkerPosition(R_MARKER)
 		
 		# Receive end position. (PC-GROUP)
 		posXEnd = 4.0
@@ -129,7 +129,7 @@ def controller():
 			
 			# Get ballbot position.
 			if (field.checkMarker(R_MARKER)):
-				posXCam, posYCam = field.getMarkerPosition(R_MARKER)
+				[posXCam, posYCam] = field.getMarkerPosition(R_MARKER)
 			else:
 				# Give error statement.
 				print("Robot not found!")
