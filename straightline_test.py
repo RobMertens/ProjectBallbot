@@ -84,6 +84,7 @@ def controller():
 	while running:
 		# Mode.
 		ballbot.set_attitude_mode()
+		print("Attitude mode!")
 		
 		# Find obstacles.
 		# Declare vars
@@ -103,6 +104,7 @@ def controller():
 			pass
 		
 		[posXStart, posYStart] = field.getMarkerPosition(R_MARKER)
+		print("Robot found @ ", posXStart, posYStart)
 		
 		# Receive end position. (PC-GROUP)
 		posXEnd = 4.0
@@ -118,6 +120,7 @@ def controller():
 		# Move over path.		
 		# Velocity mode.
 		ballbot.set_velocity_mode()
+		print("Velocity mode!")
 		
 		# Loop
 		for i in xrange(1, len(time)):
@@ -144,12 +147,14 @@ def controller():
 			
 			# Velocity command.			
 			ballbot.set_velocity_cmd(velXCmd, velYCmd, 0)
+			print(velXCmd, velYCmd)
 			
 			# Maintain loop time.
 			watchdog.hold()
 		
 		# MODE.
 		ballbot.set_attitude_mode()
+		print("END")
 
 """
 MAIN: THREADS

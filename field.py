@@ -93,7 +93,7 @@ class field:
 			
 			# OBSTACLE
 			elif (h_id == self.__OBSTACLE):
-				o_id, o_shape, o_x1, o_y1, o_x2, o_y2, o_x3, o_y3 = struct.unpack('@2i6d', package[byte:(byte+size)])
+				o_id, o_shape, o_x1, o_y1, o_x2, o_y2, o_x3, o_y3 = self.struct.unpack('@2i6d', package[byte:(byte+size)])
 				self.obstacles.update({obstacleCount:[o_id, o_shape, o_x1, o_y1, o_x2, o_y2, o_x3, o_y3]})
 				
 				obstacleCount += 1
@@ -214,7 +214,7 @@ class field:
 		"""
 		obstacle = [0]
 		
-		for i,j in self.obstacles.iteritems():
+		for i,j in self.obstacles:
 			if (j[0] == obstacleId):
 				obstacle = j
 		
