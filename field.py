@@ -16,6 +16,9 @@ class field:
 	markers = {}
 	obstacles = {}
 	
+	posXEnd = 0.0;
+	posYEnd = 0.0;
+	
 	# Enum
 	__MARKER   = 0
 	__OBSTACLE = 1
@@ -35,6 +38,10 @@ class field:
 		#self.__node.set_name(self.__name)
 		self.__node.start()
 		self.__node.join(self.__group)
+		
+		# UUID PC IBE
+		self.uuid_self = self.__node.uuid()
+		self.uuid_extern = self.__node.uuid()
 	
 	def __exit__(self):
 		"""
@@ -86,6 +93,7 @@ class field:
 			# MARKER
 			if (h_id == self.__MARKER):						
 				m_id, m_x, m_y, m_t = self.struct.unpack('@i3d', package[byte:(byte+size)])
+				
 				self.markers.update({markerCount:[m_id, m_x, m_y, m_t]})
 				
 				markerCount += 1
@@ -250,4 +258,67 @@ class field:
 		# Return.
 		return objectCount
 	
+	# --------------------------------------
+	# THESE FUNCTIONS DO NOT BELONG TO FIELD
+	# --------------------------------------
+	def assignExternalUuid(self, name):
+		"""
+		Method for assigning the external UUID.
+		"""
+		ret = False
+		peers = self.__node.peers()
+		
+		for p in peers:
+			if(self.__node.get_peer_name(p)==name):
+				self.uuid_extern = p
+				ret = True
+		
+		return ret
+	
+	def whisperExternalUuid(self, msg):
+		"""
+		Whisper method
+		"""
+		self.__node.whisper(self.uuid_extern, msg)
+	
+	def receiveStartExternalUuid(self):
+		"""
+		Receive endpoint by whisper method from PC.
+		"""
+		ret = False
+		
+		self.whisperExternalUuid('START')
+		
+		message = self.__node.recv()
+		while(message[0]=='WHISPER' and message[1]==self.uuid_extern):
+			message = self.__node.recv()
+		
+		if(message[4]=='ACK'):
+			ret = True
+		
+		return ret
+	
+	def receiveEndpointExternalUuid(self):
+		"""
+		Receive endpoint by whisper method from PC.
+		"""
+		ret = False
+		
+		self.whisperExternalUuid('ENDPOINT')
+		
+		message = self.__node.recv()
+		while(message[0]=='WHISPER' and message[1]==self.uuid_extern):
+			message = self.__node.recv()
+		
+		if(message[4]!='ACK'):
+			self.posXEnd, self.posYEnd = self.struct.unpack('@2f', message[4])
+			ret = True
+		
+		return ret
+	
+	def getEndpoint(self):
+		"""
+		Get endpoint.
+		"""
+		return [self.posXEnd, self.posYEnd]
 

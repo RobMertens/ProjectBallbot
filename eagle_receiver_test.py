@@ -36,7 +36,8 @@ markers = {}
 obstacles = {}
 
 # Loop
-for i in xrange(1, 10):
+#for i in xrange(1, 10):
+while(1):
 	# Watchdog
 	watchdog = time.time()
 	updateTime = 0.0   
@@ -57,8 +58,8 @@ for i in xrange(1, 10):
 	j = 0
 	markerCount = 0
 	obstacleCount = 0
-	print("Package length:")
-	print(len(package))
+	#print("Package length:")
+	#print(len(package))
 	while(j < len(package)):
 		# HEADER
 		# Size.
@@ -68,8 +69,8 @@ for i in xrange(1, 10):
 		# Header
 		h_id = struct.unpack('@i', package[j:j+4])[0]
 		#print(repr(package[j:(j+4)]))
-		print("New header")
-		print("h_id:", repr(h_id))
+		#print("New header")
+		#print("h_id:", repr(h_id))
 		#h_id, h_time = struct.unpack('@IL', package[j:(j+8)])
 		j += size
 		
@@ -96,16 +97,11 @@ for i in xrange(1, 10):
 			#nothing
 			(1)
 		
-		print("j:", j)
+		#print("j:", j)
 	
 	print(markers)
-	print(obstacles)
+	#print(obstacles)
 
-	# Maintain loop time.
-	while (updateTime <= sampleTime):
-		updateTime = time.time() - watchdog
-
-	#print(updateTime)
 n.stop()
 
         

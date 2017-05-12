@@ -38,7 +38,7 @@ class solver:
 		"""
 		self.samplePeriod = samplePeriod
 	
-	def setRobot(self, initialPosition, terminalPosition):
+	def setRobot(self, initialPosition, terminalPosition, vmax=0.05, amax=0.05):
 		"""
 		Method for adding a robot to the system.
 		
@@ -50,10 +50,10 @@ class solver:
 		self.__terminalPosition = terminalPosition
 		
 		# Options.
-		options = {'syslimit': 'norm_inf', 'safety_distance': 0.5}
+		options = {'syslimit': 'norm_2', 'safety_distance': 0.5}
 		
 		# Add and set.
-		self.__robot = self.omg.Holonomic(options=options)
+		self.__robot = self.omg.Holonomic(options=options, bounds={'vmin':-vmax, 'vmax':vmax, 'amin':-amax, 'amax':amax})
 		self.__robot.set_initial_conditions(self.__initialPosition)
 		self.__robot.set_terminal_conditions(self.__terminalPosition)
 	
@@ -136,7 +136,17 @@ class solver:
 		self.__position = self.np.c_[solution['state']]
 		self.__velocity = self.np.c_[solution['input']]
 		self.__time     = self.np.c_[solution['time']]
-		
+	
+	def getFeedforwardGain(self, velXPath, velYPath, C_FF_KP_VEL, C_FF_VMAX_TOT):
+		"""
+		FF gain calculation.
+		"""
+		velPath = self.m.sqrt(velXPath*velXPath + velYPath*velYPath)
+	
+		kp = (1.0 - C_FF_KP_VEL)/(C_FF_VMAX_TOT)*velPath + C_FF_KP_VEL
+	
+		return kp
+	
 	def getSolution(self):
 		"""
 		Method for getting the solution.

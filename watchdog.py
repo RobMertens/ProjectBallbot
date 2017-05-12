@@ -21,13 +21,14 @@ class watchdog:
 		"""
 		Method for starting the watchdog timer.
 		"""
-		__count = t.time()
+		self.__count = self.t.time()
 	
 	def hold(self):
 		"""
 		Method for achieving target time.
 		"""
-		while (current <= target):
-			current = t.time() - __count
+		current = self.t.time() - self.__count
+		while (current <= self.__target):
+			current = self.t.time() - self.__count
 
 

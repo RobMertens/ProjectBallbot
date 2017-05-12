@@ -11,28 +11,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-#np.set_printoptions(threshold=np.nan)
+np.set_printoptions(threshold=np.nan)
 
 # Statics.
 SAMPLETIME  = 0.1
 
-ROOM_WIDTH  = 4.6
-ROOM_HEIGHT = 2.3
+ROOM_WIDTH  = 4.5
+ROOM_HEIGHT = 2.5
 
-O1_ORIGIN_X = 0.5
-O1_ORIGIN_Y = 0.1
-O1_WIDTH    = 0.08
-O1_HEIGHT   = 0.08
+O1_ORIGIN_X = 10.0
+O1_ORIGIN_Y = 5.0
+O1_WIDTH    = 2.0
+O1_HEIGHT   = 2.0
 O1_ANGLE    = pi/4
 
-O2_ORIGIN_X = 3.5
-O2_ORIGIN_Y = 0.1
-O2_RADIUS   = 0.08
+O2_ORIGIN_X = 5.0
+O2_ORIGIN_Y = 15.0
+O2_RADIUS   = 2.0
 
-POS_START_X = 2.6
-POS_START_Y = 1.0
-POS_END_X   = 4.0
-POS_END_Y   = 2.0
+POS_START_X = 3.66472935677
+POS_START_Y = 2.32552289963
+POS_END_X   = 2.0
+POS_END_Y   = 1.0
 
 # Functions.
 def rectangle(n, x, y, w, h, o):
@@ -74,8 +74,7 @@ solver = solver(SAMPLETIME)
 o1 = rectangle(0, O1_ORIGIN_X, O1_ORIGIN_Y, O1_WIDTH, O1_HEIGHT, O1_ANGLE)
 o2 = circle(1, O2_ORIGIN_X, O2_ORIGIN_Y, O2_RADIUS)
 
-#obstacles = {}
-obstacles = {0:o1, 1:o2}
+obstacles = {}
 
 solver.setEnvironment(ROOM_WIDTH, ROOM_HEIGHT, obstacles)
 
@@ -89,26 +88,4 @@ solver.solve()
 posXPath, posYPath, velXPath, velYPath, time = solver.getSolution()
 
 # Plot
-plt.plot(posXPath, posYPath, label='Desired path')
-plt.gca().add_patch(patches.Rectangle((O1_ORIGIN_X - 0.5*O1_WIDTH, O1_ORIGIN_Y - 0.5*O1_HEIGHT), O1_WIDTH, O1_HEIGHT))
-plt.gca().add_patch(patches.Circle((O2_ORIGIN_X, O2_ORIGIN_Y), O2_RADIUS))
-plt.legend(loc='upper left')
-plt.xlabel('x-axis [m]')
-plt.ylabel('y-axis [m]')
-plt.axis('equal')
-plt.axis([0, ROOM_WIDTH, 0, ROOM_HEIGHT])
-plt.grid()
-plt.savefig('images/opt_problem/path.png')
-plt.gcf().clear()
-
-plt.plot(time, velXPath, label='Velocity x')
-plt.plot(time, velYPath, label='Velocity y')
-plt.legend(loc='upper left')
-plt.title('Velocity in function of time.')
-plt.xlabel('Time [s]')
-plt.ylabel('Feedforward velocity [m/s]')
-plt.grid()
-plt.savefig('images/opt_problem/vel.png')
-plt.gcf().clear()
-
-
+print(posXPath, posYPath)

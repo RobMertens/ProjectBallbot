@@ -11,9 +11,10 @@ R_MARKER 	= 12
 #objects
 field = field(P_NODE, P_GROUP_CAM)
 
-for i in range (0, 10):
+while(1):
 	field.update()
 	while(field.checkMarker(R_MARKER) == False):
+		field.update()
 		print("robot not found")
-	[posXCam, posYCam] = field.getMarkerPosition(R_MARKER)
-	print (posXCam, posYCam)
+	[posXCam, posYCam, yawCam] = field.getMarkerPose(R_MARKER)
+	print (posXCam, posYCam, yawCam)
