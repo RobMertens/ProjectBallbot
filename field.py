@@ -14,17 +14,15 @@ class field:
 	
 	# Data buffer		
 	markers = {}
+	robot = [0.0, 0.0, 0.0]
 	obstacles = {}
-	
-	posXEnd = 0.0;
-	posYEnd = 0.0;
 	
 	# Enum
 	__MARKER   = 0
 	__OBSTACLE = 1
 	__IMAGE    = 2
 	
-	def __init__(self, name, group):
+	def __init__(self, name, group, marker):
 		"""
 		Constructor.
 		Initializes the pyre node.
@@ -35,13 +33,21 @@ class field:
 		self.__group = group
 		
 		self.__node = p.Pyre(self.__name)
-		#self.__node.set_name(self.__name)
 		self.__node.start()
 		self.__node.join(self.__group)
+		
+		self.__marker = marker
 		
 		# UUID PC IBE
 		self.uuid_self = self.__node.uuid()
 		self.uuid_extern = self.__node.uuid()
+		
+		# Global vars.
+		self.posXCam = 0.0
+		self.posYCam = 0.0
+		self.yawCam = 0.0
+		self.posXEnd = 0.0
+		self.posYEnd = 0.0
 	
 	def __exit__(self):
 		"""
@@ -65,16 +71,15 @@ class field:
 		obstacleCount = 0
 		self.markers.clear()
 		self.obstacles.clear()
-		success = True
 		
 		# Obtain information from camera.
 		message = self.__node.recv()
-		while(message[0] != 'SHOUT'):
+		while(message[0]!='SHOUT'):
 			message = self.__node.recv()
-
+		
 		# Only take the camera data.
 		package = message[4]
-
+		
 		# Loop through package.
 		while(byte < len(package)):
 			# HEADER
@@ -95,7 +100,9 @@ class field:
 				m_id, m_x, m_y, m_t = self.struct.unpack('@i3d', package[byte:(byte+size)])
 				
 				self.markers.update({markerCount:[m_id, m_x, m_y, m_t]})
-				
+				if(m_id==12):
+					self.robot = [m_x, m_y, m_t]
+					
 				markerCount += 1
 				byte += size
 			
@@ -109,15 +116,12 @@ class field:
 			
 			# IMAGE
 			elif (h_id == self.__IMAGE):
-				#TODO:: What to do with an image?
-				success = False
+				pass
 			
 			# ERROR
 			else:
-				success = False
-				
-		# Return
-		return success
+				pass
+	
 	
 	def checkMarker(self, markerId):
 		"""
@@ -171,6 +175,9 @@ class field:
 				marker = j[1:4]
 		
 		return marker
+	
+	def getRobotPose(self):
+		return self.robot
 	
 	def getMarkerPosition(self, markerId):
 		"""
@@ -290,10 +297,10 @@ class field:
 		self.whisperExternalUuid('START')
 		
 		message = self.__node.recv()
-		while(message[0]=='WHISPER' and message[1]==self.uuid_extern):
+		while(message[0]!='WHISPER' and message[1]!=self.uuid_extern):
 			message = self.__node.recv()
 		
-		if(message[4]=='ACK'):
+		if(message[3]=='ACK'):
 			ret = True
 		
 		return ret
@@ -307,11 +314,12 @@ class field:
 		self.whisperExternalUuid('ENDPOINT')
 		
 		message = self.__node.recv()
-		while(message[0]=='WHISPER' and message[1]==self.uuid_extern):
+		print(message)
+		while(message[0]!='WHISPER'):
 			message = self.__node.recv()
 		
-		if(message[4]!='ACK'):
-			self.posXEnd, self.posYEnd = self.struct.unpack('@2f', message[4])
+		if(message[3]!='ACK'):
+			self.posXEnd, self.posYEnd = self.struct.unpack('@2f', message[3])
 			ret = True
 		
 		return ret

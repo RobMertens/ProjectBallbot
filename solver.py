@@ -38,7 +38,7 @@ class solver:
 		"""
 		self.samplePeriod = samplePeriod
 	
-	def setRobot(self, initialPosition, terminalPosition, vmax=0.05, amax=0.05):
+	def setRobot(self, initialPosition, terminalPosition, sdis=0.5, vmax=0.05, amax=0.05):
 		"""
 		Method for adding a robot to the system.
 		
@@ -50,14 +50,14 @@ class solver:
 		self.__terminalPosition = terminalPosition
 		
 		# Options.
-		options = {'syslimit': 'norm_2', 'safety_distance': 0.5}
+		options = {'syslimit': 'norm_2', 'safety_distance': sdis}
 		
 		# Add and set.
 		self.__robot = self.omg.Holonomic(options=options, bounds={'vmin':-vmax, 'vmax':vmax, 'amin':-amax, 'amax':amax})
 		self.__robot.set_initial_conditions(self.__initialPosition)
 		self.__robot.set_terminal_conditions(self.__terminalPosition)
 	
-	def setEnvironment(self, width, height, obstacles):
+	def setEnvironment(self, width, height):
 		"""
 		Method for setting up the environment.
 		
@@ -69,7 +69,7 @@ class solver:
 		# This is the field of view of the camera.
 		# Manual is good enough for now.
 		self.__environment = self.omg.Environment(room={'shape': self.omg.Rectangle(width, height), 'position': [0.5*width, 0.5*height]})
-		self.addObstacles(obstacles)
+		#self.addObstacles(obstacles)
 	
 	def addObstacles(self, obstacles):
 		"""
@@ -121,6 +121,12 @@ class solver:
 			
 			
 			self.__environment.add_obstacle(self.omg.Obstacle({'position': center}, shape=obstacle))
+	
+	def addCircle(self, x_c, y_c, r):
+		"""
+		Add circle.
+		"""
+		self.__environment.add_obstacle(self.omg.Obstacle({'position': [x_c, y_c]}, shape=self.omg.Circle(radius=r)))
 	
 	def solve(self):
 		"""

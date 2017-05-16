@@ -36,19 +36,15 @@ markers = {}
 obstacles = {}
 
 # Loop
-#for i in xrange(1, 10):
-while(1):
-	# Watchdog
-	watchdog = time.time()
-	updateTime = 0.0   
-	
+for i in xrange(1, 2):
+#while(1):
 	# Clear dicts.
 	markers.clear()
 	obstacles.clear()
 	
 	# Obtain information from camera.
-        message = n.recv()
-	while(message[0] != 'SHOUT'):
+	message = n.recv()
+	while(message[0]!='SHOUT'):
 		message = n.recv()
 	
 	# Only take the camera data
@@ -99,8 +95,8 @@ while(1):
 		
 		#print("j:", j)
 	
-	print(markers)
-	#print(obstacles)
+	#print(markers)
+	print(obstacles)
 
 n.stop()
 
