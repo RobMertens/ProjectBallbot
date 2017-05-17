@@ -1,6 +1,5 @@
 """
 Main file for the RPi-ballbot.
-
 @Author: Rob Mertens
 @Author: Ibe Denaux
 """
@@ -10,6 +9,8 @@ import numpy as np
 import time as t
 import threading
 import Queue
+
+from math import atan2, pi
 
 # Classes
 from pid import PID
@@ -129,7 +130,7 @@ def controller(q):
 		#obstacles = {o1:[0, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
 		
 		solver.setEnvironment(S_ROOM_WIDTH, S_ROOM_HEIGHT)
-		solver.addCircle(2.5, 1.5, 0.5)
+		#solver.addCircle(2.5, 1.5, 0.5)
 		solver.setRobot([posXCam, posYCam],
 				[posXEnd, posYEnd],
 				S_SAFETY_MARGIN,
@@ -152,25 +153,43 @@ def controller(q):
 			# Watchdog
 			watchdog.start() 
 			
+			# Update from queue.
 			[posXCam, posYCam, yawCam] = q.get()
 			
+			# Calculate angles.
+			gamma = atan2(velYPath[i], velXPath[i])
+			if(gamma < 0):
+				gamma = gamma + 2*pi
+			
+			beta = yawCam
+			if(beta < 0):
+				beta = beta + 2*pi
+			
+			alpha = beta - gamma
+			
+			# Rotate to path frame.
+			#[posXCamRot, posYCamRot] = ballbot.rotate(posXCam, posYCam, gamma)
+			[e_x, e_y] = ballbot.rotate(posXPath[i] - posXCam, posYPath[i] - posYCam, -gamma)
+			[velXPathRot, velYPathRot] = ballbot.rotate(velXPath[i], velYPath[i], -gamma)
+			
 			# Correct position.
-			velXCorr = pidPosX.calculate(posXCam, posXPath[i])
-			velYCorr = pidPosY.calculate(posYCam, posYPath[i])
+			velXCorr = pidPosX.calculate(e_x, 0.0)
+			velYCorr = pidPosY.calculate(e_y, 0.0)
 			
 			# Correct velocity gain.
-			kp = solver.getFeedforwardGain(velXPath[i], velYPath[i], C_FF_KP_VEL, C_FF_VMAX_TOT)
+			kp = solver.getFeedforwardGain(velXPathRot, velYPathRot, C_FF_KP_VEL, C_FF_VMAX_TOT)
 			
 			# Feed forward.
-			velXCmd = velXPath[i]*kp + velXCorr
-			velYCmd = velYPath[i]*kp + velYCorr
+			velXCmd = velXPathRot*kp + velXCorr
+			velYCmd = velYPathRot*kp + velYCorr
 			
 			# Velocity command.			
-			ballbot.set_velocity_cmd(velXCmd, velYCmd, 0, yawCam)
+			[velXCmdRob, velYCmdRob] = ballbot.rotate(velXCmd, velYCmd, alpha)
+			ballbot.set_velocity_cmd(velXCmdRob, velYCmdRob, 0)
 			#[velXRob, velYRob, velZRob] = ballbot.global2RobotFrame(velXCmd, velYCmd, 0, yawCam)
 			#field.whisperExternalUuid("V_ROB_X:%s V_ROB_Y:%s YAW:%s" % (velXRob, velYRob, yawCam))
-			field.whisperExternalUuid("%s,%s,%s,%s,%s,%s" % (posXCam, posYCam, posXPath[i], posYPath[i], velXCorr, velYCorr))
-			
+			#field.whisperExternalUuid("%s,%s,%s,%s,%s,%s" % (posXCam, posYCam, posXPath[i], posYPath[i], velXCorr, velYCorr))
+			field.whisperExternalUuid("%s,%s,%s,%s,%s,%s" % (e_x, e_y,  velXPathRot, velYPathRot, velXCmd, velYCmd))
 			# Maintain loop time.
 			watchdog.hold()
 		

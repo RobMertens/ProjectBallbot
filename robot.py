@@ -110,15 +110,15 @@ class Robot:
 
 		return tick
 	
-	def global2RobotFrame(self, x_g, y_g, z_g, yaw_g):
-		x_l = x_g*self.m.cos(yaw_g) + y_g*self.m.sin(yaw_g)
-		y_l = -x_g*self.m.sin(yaw_g) + y_g*self.m.cos(yaw_g)
-		z_l = z_g
+	def rotate(self, x_g, y_g, a_g):
+		x_l = x_g*self.m.cos(a_g) - y_g*self.m.sin(a_g)
+		y_l = x_g*self.m.sin(a_g) + y_g*self.m.cos(a_g)
+		#z_l = z_g
 		
-		return [x_l, y_l, z_l]
+		return [x_l, y_l]
 	
-	def set_velocity_cmd(self, vx_g, vy_g, vz_g, yaw_g):
-		[vx_l, vy_l, vz_l] = self.global2RobotFrame(vx_g, vy_g, vz_g, yaw_g)
+	def set_velocity_cmd(self, vx_l, vy_l, vz_l):
+		#[vx_l, vy_l, vz_l] = self.global2RobotFrame(vx_g, vy_g, vz_g, a_g)
 		
 		tx = self.meter2Ticks(vx_l)
 		ty = self.meter2Ticks(vy_l)

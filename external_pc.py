@@ -22,7 +22,7 @@ posXPath = []
 posYPath = []
 velXCorr = []
 velYCorr = []
-time	 = []
+timeVec	 = []
 
 # Pyre node.
 node = pyre.Pyre(P_NODE_SELF)
@@ -129,7 +129,7 @@ while(running):
 			velYCorr.append(vYCorr)
 			
 			t = t + 0.1
-			time.append(t)
+			timeVec.append(t)
 		
 		except ValueError:
 			pass
@@ -144,7 +144,7 @@ posXPath = np.array(posXPath)
 posYPath = np.array(posYPath)
 velXCorr = np.array(velXCorr)
 velYCorr = np.array(velYCorr)
-time	 = np.array(time)
+timeVec	 = np.array(timeVec)
 	
 
 # Plot
@@ -162,8 +162,8 @@ plt.grid()
 plt.savefig('images/plot.png')
 plt.gcf().clear()	
 
-plt.plot(time, velXCorr, label='PID X output')
-plt.plot(time, velYCorr, label='PID Y output')
+plt.plot(timeVec, velXCorr, label='PID X output')
+plt.plot(timeVec, velYCorr, label='PID Y output')
 plt.legend(loc='upper left')
 plt.title('PID output velocities in function of time')
 plt.xlabel('Time [s]')
