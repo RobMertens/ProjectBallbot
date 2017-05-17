@@ -173,8 +173,8 @@ def controller(q):
 			[velXPathRot, velYPathRot] = ballbot.rotate(velXPath[i], velYPath[i], -gamma)
 			
 			# Correct position.
-			velXCorr = pidPosX.calculate(e_x, 0.0)
-			velYCorr = pidPosY.calculate(e_y, 0.0)
+			velXCorr = pidPosX.calculate(0.0, e_x)
+			velYCorr = pidPosY.calculate(0.0, e_x)
 			
 			# Correct velocity gain.
 			kp = solver.getFeedforwardGain(velXPathRot, velYPathRot, C_FF_KP_VEL, C_FF_VMAX_TOT)
