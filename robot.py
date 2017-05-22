@@ -127,4 +127,5 @@ class Robot:
 		msg = self.mav.velocity_cmd_encode(tx, ty, tz, 0, 0, 0)
 		self.send(msg)
 
-
+	def getState(self):
+		return [self.x, self.y, self.z, self.roll, self.pitch, self.yaw]

@@ -16,13 +16,31 @@ running = True
 t = 0.0
 
 # Numpy arrays
-posXCam  = []
-posYCam  = []
-posXPath = []
-posYPath = []
-velXCorr = []
-velYCorr = []
-timeVec	 = []
+# Global vars are declared in the {CAM}-frame.
+posXCamGlobal	= []
+posYCamGlobal	= []
+posXPathGlobal	= []
+posYPathGlobal	= []
+velXPathGlobal	= []
+velYPathGlobal	= []
+
+# Local vars are declared in the {PATH}-frame.
+velXCorrLocal	= []
+velYCorrLocal	= []
+velXPathLocal	= []
+velYPathLocal	= []
+velXCmdLocal	= []
+velYCmdLocal	= []
+errorXLocal	= []
+errorYLocal	= []
+
+# Robot vars are variable from the low-level controller.
+rollRobot 	= []
+pitchRobot 	= []
+yawRobot 	= []
+
+# Time vector.
+timeVec	 	= []
 
 # Pyre node.
 node = pyre.Pyre(P_NODE_SELF)
@@ -39,11 +57,14 @@ def findBallbot():
 	for p in peers:
 		if(node.get_peer_name(p)==P_NODE_BB):
 			uuid = p
-			print(node.get_peer_name(uuid), uuid)
+			#print(node.get_peer_name(uuid), uuid)
 			ret = True
 	
 	return ret
 
+"""
+MAIN PROGRAM
+"""
 # Find bot.
 print("Searching...")
 while(findBallbot()==False):
@@ -108,28 +129,63 @@ while(running):
 		running = False
 	
 	else:
-		print(msg[3])
+		#print(msg[3])
 		
 		#update	
 		try:
+			# Get message.
 			strs   = msg[3].split(",")
 			
-			pXCam  = float(strs[0])
-			pYCam  = float(strs[1])
-			pXPath = float(strs[2])
-			pYPath = float(strs[3])
-			vXCorr = float(strs[4])
-			vYCorr = float(strs[5])
+			# Message structure
+			# First the globals.
+			gPosXCam  = float(strs[0])
+			gPosYCam  = float(strs[1])
+			gPosXPath = float(strs[2])
+			gPosYPath = float(strs[3])
+			gVelXPath = float(strs[4])
+			gVelYPath = float(strs[5])
 			
-			posXCam.append(pXCam)
-			posYCam.append(pYCam)
-			posXPath.append(pXPath)
-			posYPath.append(pYPath)
-			velXCorr.append(vXCorr)
-			velYCorr.append(vYCorr)
+			posXCamGlobal.append(gPosXCam)
+			posYCamGlobal.append(gPosYCam)
+			posXPathGlobal.append(gPosXPath)
+			posYPathGlobal.append(gPosYPath)
+			velXPathGlobal.append(gVelXPath)
+			velYPathGlobal.append(gVelYPath)
 			
+			# Second the locals.
+			lVelXCorr = float(strs[6])
+			lVelYCorr = float(strs[7])
+			lVelXPath = float(strs[8])
+			lVelYPath = float(strs[9])
+			lVelXCmd  = float(strs[10])
+			lVelYCmd  = float(strs[11])
+			lErrorX   = float(strs[12])
+			lErrorY   = float(strs[13])
+			
+			velXCorrLocal.append(lVelXCorr)
+			velYCorrLocal.append(lVelYCorr)
+			velXPathLocal.append(lVelXPath)
+			velYPathLocal.append(lVelYPath)
+			velXCmdLocal.append(lVelXCmd)
+			velYCmdLocal.append(lVelYCmd)
+			errorXLocal.append(lErrorX)
+			errorYLocal.append(lErrorY)
+			
+			# Third the ballbot state.
+			#rRoll     = float(strs[14])
+			#rPitch    = float(strs[15])
+			#rYaw      = float(strs[16])
+			
+			#rollRobot.append(rRoll)
+			#pitchRobot.append(rPitch)
+			#yawRobot.append(rYaw)
+			
+			# Fourth the time vec.			
 			t = t + 0.1
 			timeVec.append(t)
+			
+			# Print data.
+			print(gPosXPath, gPosYPath, gPosXCam, gPosYCam, lErrorX, lErrorY)
 		
 		except ValueError:
 			pass
@@ -137,40 +193,93 @@ while(running):
 # End.
 print('GOAL REACHED!')
 
+# LOGGING
 # Put in numpy array.
-posXCam = np.array(posXCam)
-posYCam = np.array(posYCam)
-posXPath = np.array(posXPath)
-posYPath = np.array(posYPath)
-velXCorr = np.array(velXCorr)
-velYCorr = np.array(velYCorr)
-timeVec	 = np.array(timeVec)
-	
+posXCamGlobal  = np.array(posXCamGlobal)
+posYCamGlobal  = np.array(posYCamGlobal)
+posXPathGlobal = np.array(posXPathGlobal)
+posYPathGlobal = np.array(posYPathGlobal)
+velXPathGlobal = np.array(velXPathGlobal)
+velYPathGlobal = np.array(velYPathGlobal)
+
+velXCorrLocal  = np.array(velXCorrLocal)
+velYCorrLocal  = np.array(velYCorrLocal)
+velXPathLocal  = np.array(velXPathLocal)
+velYPathLocal  = np.array(velYPathLocal)
+velXCmdLocal   = np.array(velXCmdLocal)
+velYCmdLocal   = np.array(velYCmdLocal)
+errorXLocal    = np.array(errorXLocal)
+errorYLocal    = np.array(errorYLocal)
+
+rollRobot      = np.array(rollRobot)
+pitchRobot     = np.array(pitchRobot)
+yawRobot       = np.array(yawRobot)
+
+timeVec	       = np.array(timeVec)
+
+#Save
+root = 'images/'
+gmtime = time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
+
+basestr = root
+basestr += gmtime
+
+logfile = basestr
+logfile += ".txt"
+
+np.savetxt(logfile,    (posXCamGlobal,posYCamGlobal,
+			posXPathGlobal,posYPathGlobal,
+			velXPathGlobal,velYPathGlobal,
+			velXCorrLocal,velYCorrLocal,
+			velXPathLocal,velYPathLocal,
+			velXCmdLocal,velYCmdLocal,
+			errorXLocal,errorYLocal,
+			#rollRobot,
+			#pitchRobot,
+			#yawRobot,
+			timeVec))
+
+posestr = basestr
+posestr += '_pose.png'
+
+pidvelstr = basestr
+pidvelstr += '_pidvel.png'
+
+errstr = basestr
+errstr += '_error.png'
 
 # Plot
-plt.plot(posXPath, posYPath, label='Desired path')
-plt.plot(posXCam, posYCam, label='Actual path')
-plt.gca().add_patch(patches.Circle((2.5, 1.5), 0.5))
+plt.plot(posXPathGlobal, posYPathGlobal, label='Desired path')
+plt.plot(posXCamGlobal, posYCamGlobal, label='Actual path')
+plt.gca().add_patch(patches.Circle((2.5, 1.5), 0.25))
 plt.legend(loc='upper left')
 plt.title('Desired vs. actual path')
 plt.xlabel('x-axis [m]')
 plt.ylabel('y-axis [m]')
-plt.xlim([0, S_ROOM_WIDTH])
-plt.ylim([0, S_ROOM_HEIGHT])
 plt.axis('equal')
+plt.axis([0, S_ROOM_WIDTH, 0, S_ROOM_HEIGHT])
 plt.grid()
-plt.savefig('images/plot.png')
+plt.savefig(posestr)
 plt.gcf().clear()	
 
-plt.plot(timeVec, velXCorr, label='PID X output')
-plt.plot(timeVec, velYCorr, label='PID Y output')
-plt.legend(loc='upper left')
+plt.plot(timeVec, velXCorrLocal, label='PID X output')
+plt.plot(timeVec, velYCorrLocal, label='PID Y output')
+plt.legend(loc='lower left')
 plt.title('PID output velocities in function of time')
 plt.xlabel('Time [s]')
 plt.ylabel('PID output velocity [m/s]')
-plt.ylim([-0.12,0.12])
+plt.ylim([-0.15,0.15])
 plt.grid()
-plt.savefig('images/vel.png')
+plt.savefig(pidvelstr)
 plt.gcf().clear()
 
-
+plt.plot(timeVec, errorXLocal, label='Error X in path frame')
+plt.plot(timeVec, errorYLocal, label='Error Y in path frame')
+plt.legend(loc='lower left')
+plt.title('Errors in function of time expressed in the path frame')
+plt.xlabel('Time [s]')
+plt.ylabel('Error [m]')
+#plt.ylim([-0.15,0.15])
+plt.grid()
+plt.savefig(errstr)
+plt.gcf().clear()

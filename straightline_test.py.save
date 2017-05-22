@@ -22,21 +22,21 @@ from robot import Robot
 # Indexing:
 # C : pid-Control
 C_KP_X  =  0.4
-C_KI_X  =  0.005
+C_KI_X  =  0.0
 C_KD_X  =  0.0
-C_MAX_X =  0.125
-C_MIN_X = -0.125
+C_MAX_X =  0.1
+C_MIN_X = -0.1
 
-C_KP_Y  =  0.7
-C_KI_Y  =  C_KP_Y/80
+C_KP_Y  =  1.2
+C_KI_Y  =  0.0
 C_KD_Y  =  0.0
 C_MAX_Y =  0.1
 C_MIN_Y = -0.1
 
-C_FF_VMAX_TOT = 0.08
-C_FF_AMAX_TOT = 0.06
+C_FF_VMAX_TOT = 0.1
+C_FF_AMAX_TOT = 0.04
 
-C_FF_KP_VEL = 4.0
+C_FF_KP_VEL = 1.5
 
 # R : Robot/Ballbot
 R_MARKER = 12
@@ -93,15 +93,13 @@ def receiveEagle(q):
 	while running:
 		# Field receiver.
 		field.update()
-		dataField = field.getRobotPose()
+		data = field.getRobotPose()
 		
 		# Ballbot receiver.
-		#ballbot.receive()
-		#ballbot.info_pose()
-		#dataBallbot = ballbot.getState()
-		
-		data = dataField #+ dataBallbot
-		
+		ballbot.receive()
+		ballbot.info_pose()
+		data + [ballbot.x, ballbot.y, ballbot.z, ballbot.roll, ballbot.pitch, ballbot.yaw]
+		print(data)
 		# Put on queue.
 		q.put_nowait(data)
 
@@ -126,10 +124,7 @@ def controller(q):
 		ballbot.set_velocity_mode()
 		field.whisperExternalUuid("VELOCITY MODE!")
 		
-		# Get from queue.
 		[posXCam, posYCam, yawCam] = q.get()
-		#[posXCam, posYCam, yawCam, bb_x, bb_y, bb_z, bb_roll, bb_pitch, bb_yaw] = q.get()
-		
 		# Setup robot.		
 		#while(field.receiveEndpointExternalUuid()==False):
 		#	t.sleep(0.1)	
@@ -139,9 +134,12 @@ def controller(q):
 		field.whisperExternalUuid("BALLBOT AT X:%s Y:%s" % (posXCam, posYCam))
 		field.whisperExternalUuid("GOAL AT X:%s Y:%s" % (posXEnd, posYEnd))
 		
-		# Setup and solve optimization problem.		
+		# Setup and solve optimization problem.
+		#obstacles = {}
+		#obstacles = {o1:[0, 2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}
+		
 		solver.setEnvironment(S_ROOM_WIDTH, S_ROOM_HEIGHT)
-		solver.addCircle(2.5, 1.5, 0.5)
+		#solver.addCircle(2.5, 1.5, 0.5)
 		solver.setRobot([posXCam, posYCam],
 				[posXEnd, posYEnd],
 				S_SAFETY_MARGIN,
@@ -159,33 +157,28 @@ def controller(q):
 		# Empty queue.
 		flush(q)
 		
-		# Bug fix.
-		gammaOld = 0.0
-		end = round(0.8*len(time))
-		velXPathRot = 0.0
-		
 		# Loop
 		for i in xrange(1, len(time)):
 			# Watchdog
 			watchdog.start() 
 			
 			# Update from queue.
-			[posXCam, posYCam, yawCam] = q.get()
-			#[posXCam, posYCam, yawCam, bb_x, bb_y, bb_z, bb_roll, bb_pitch, bb_yaw] = q.get()
+			[posXCam, posYCam, yawCam, bb_x, bb_y, bb_z, bb_r, bb_p, bb_y] = q.get()
 			
 			# Calculate angles.
 			gamma = atan2(velYPath[i], velXPath[i])
-			if(i > end and abs(velXPathRot) < 0.01):
-				gamma = gammaOld
+			if(gamma < 0):
+				gamma = gamma + 2*pi
 			
-			alpha = gamma - yawCam
-			#print(gamma*180/pi, yawCam*180/pi, alpha*180/pi)
+			beta = yawCam
+			if(beta < 0):
+				beta = beta + 2*pi
 			
+			alpha = gamma - beta
+			#print(gamma*180/pi, beta*180/pi, alpha*180/pi)
 			# Rotate to path frame.
 			#[posXCamRot, posYCamRot] = ballbot.rotate(posXCam, posYCam, gamma)
-			e_x_g = posXPath[i] - posXCam
-			e_y_g = posYPath[i] - posYCam
-			[e_x, e_y] = ballbot.rotate(e_x_g, e_y_g, -gamma)
+			[e_x, e_y] = ballbot.rotate(posXPath[i] - posXCam, posYPath[i] - posYCam, -gamma)
 			[velXPathRot, velYPathRot] = ballbot.rotate(velXPath[i], velYPath[i], -gamma)
 			
 			# Correct position.
@@ -194,8 +187,6 @@ def controller(q):
 			
 			# Correct velocity gain.
 			kp = solver.getFeedforwardGain(velXPathRot, velYPathRot, C_FF_KP_VEL, C_FF_VMAX_TOT)
-			if(i > end):
-				kp = 1.0
 			
 			# Feed forward.
 			velXCmd = velXPathRot*kp + velXCorr
@@ -204,12 +195,10 @@ def controller(q):
 			# Velocity command.			
 			[velXCmdRob, velYCmdRob] = ballbot.rotate(velXCmd, velYCmd, alpha)
 			ballbot.set_velocity_cmd(velXCmdRob, velYCmdRob, 0)
-			field.whisperExternalUuid("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s" % (posXCam, posYCam, posXPath[i], posYPath[i], velXPath[i], velYPath[i], velXCorr, velYCorr,  velXPathRot, velYPathRot, velXCmd, velYCmd, e_x, e_y))
-			#field.whisperExternalUuid("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s") % (posXCam, posYCam, posXPath[i], posYPath[i], velXPath[i], velYPath[i], velXCorr, velYCorr, velXPathRot, velYPathRot, velXCmd, velYCmd, e_x, e_y, bb_roll, bb_pitch, bb_yaw"))
-			
-			# Hold gamma.
-			gammaOld = gamma
-			
+			#[velXRob, velYRob, velZRob] = ballbot.global2RobotFrame(velXCmd, velYCmd, 0, yawCam)
+			#field.whisperExternalUuid("V_ROB_X:%s V_ROB_Y:%s YAW:%s" % (velXRob, velYRob, yawCam))
+			#field.whisperExternalUuid("%s,%s,%s,%s,%s,%s" % (posXCam, posYCam, posXPath[i], posYPath[i], velXCorr, velYCorr))
+			field.whisperExternalUuid("%s,%s,%s,%s,%s,%s" % (posXCam, posYCam, posXPath[i], posYPath[i], velXCorr, velYCorr))
 			# Maintain loop time.
 			watchdog.hold()
 		

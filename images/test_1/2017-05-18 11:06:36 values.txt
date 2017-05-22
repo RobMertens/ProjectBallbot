@@ -1,0 +1,17 @@
+X_KP 		= 0.4 
+X_KI 		= 0.0
+X_KD 		= 0.0
+X_MAX 		= 0.1
+X_MIN 		= -0.1
+
+Y_KP 		= 0.8
+Y_KI 		= 0.01
+Y_KD 		= 0.0
+Y_MAX 		= 0.1
+Y_MIN 		= -0.1
+
+FF_V_MAX	= 0.1
+FF_V_MIN	= -0.1
+FF_A_MAX	= 0.04
+FF_A_MIN	= -0.04
+FF_KP		= 1.4

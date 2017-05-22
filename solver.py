@@ -12,16 +12,16 @@ class solver:
 	#shapes = __import__('matplotlib.patches')
 	
 	# Start-/endpoint
-	__initialPosition  = []
-	__terminalPosition = []
+	#__initialPosition  = []
+	#__terminalPosition = []
 	
 	# Solution
-	__position = []
-	__veloctiy = []
-	__time	   = []
+	#__position = []
+	#__veloctiy = []
+	#__time	   = []
 	
 	# Static vars.
-	updatePeriod = 1.0
+	#updatePeriod = 1.0
 	
 	def __init__(self, samplePeriod):
 		"""
@@ -29,6 +29,15 @@ class solver:
 		"""
 		# Some vars.
 		self.samplePeriod = samplePeriod
+		
+		self.__initialPosition = []
+		self.__terminalPosition = []
+		
+		self.__position = []
+		self.__velocity = []
+		self.__time = []
+		
+		self.updatePeriod = 1.0
 	
 	def setSampletime(self, samplePeriod):
 		"""
@@ -38,7 +47,7 @@ class solver:
 		"""
 		self.samplePeriod = samplePeriod
 	
-	def setRobot(self, initialPosition, terminalPosition, sdis=0.5, vmax=0.05, amax=0.05):
+	def setRobot(self, initialPosition, terminalPosition, sdis, vmax, amax):
 		"""
 		Method for adding a robot to the system.
 		
@@ -142,7 +151,7 @@ class solver:
 		self.__position = self.np.c_[solution['state']]
 		self.__velocity = self.np.c_[solution['input']]
 		self.__time     = self.np.c_[solution['time']]
-	
+			
 	def getFeedforwardGain(self, velXPath, velYPath, C_FF_KP_VEL, C_FF_VMAX_TOT):
 		"""
 		FF gain calculation.
