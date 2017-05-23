@@ -1,4 +1,7 @@
-from robot import Robot
+'''
+Test file for the robot.
+'''
+from src.robot import Robot
 import threading
 import time
 

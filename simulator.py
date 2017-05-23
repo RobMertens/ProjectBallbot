@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 from casadi import *
-from omgtools import *
+from src.omgtools import *
 
-from pid import PID
+from src.pid import PID
 
 #np.set_printoptions(threshold=np.nan)
 

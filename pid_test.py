@@ -1,6 +1,6 @@
-from pid import PID
-from field import field
-from robot import Robot
+from src.pid import PID
+from src.field import field
+from src.robot import Robot
 
 import numpy as np
 import threading
